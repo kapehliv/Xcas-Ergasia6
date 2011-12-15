@@ -1,0 +1,265 @@
+/* ONOMATA OMADAS */
+/* Lazaridis Lazaros (AEM: 705) */
+/* Pechlivanidou Katerina (AEM: 706) */
+/* Stagkopoulou Alexandra (AEM:708) */
+
+/* PERIGRAFH PROGRAMMATOS */
+
+/* To programma auto upologizei ena athroisma ths morfhs Σ(polywnumo(k)) apo k=0 mexri n-1.*/
+/* Gia thn ulopoihsh auth tha xreiastoume tous arithmous StirlingS2, pou apoteloun tous*/
+/* suntelestes gia th metavash apo aples dunameis se fthinouses paragontikes. */
+/* Tha xreiastoume mia sunarthsh pou na ulopoiei ton upologismo twn*/
+/* fm_[k] = FactorialPower[k, m+1]/(m+1). Akomh, tha xreiastei mia sunarthsh pou na */
+/* ulopoiei to teliko athroisma ws pros n.*/
+
+/* Panw apo kathe sunarthsh to kathe melos perigrafei thn eisodo, thn eksodo kai mesa sth*/
+/* sth sunarthsh me sxolia to ti kanei*/
+
+//Kuriws programma pou enwnei tis epimerous sunarthseis
+summ(poly,k):={
+
+  local polyTemp, lengthPoly, j, power, maxPower, stirNum, dirtyBit, final2, coeffic;
+  
+  coeffic:=[]; //Syntelestes
+  power := []; //dunameis
+  stirNum := []; //arithmoi stirling
+  dirtyBit:=0; //elegxos gia <0 dunameis
+
+
+ //ypologismos suntelestwn poluwnumou
+  coeffic :=coeffs(poly,k); 
+  polyTemp := string(poly); //Diaperash toy polywnymou ws String
+  k:= string(k);
+  lengthPoly := length(polyTemp);
+
+
+//Diaperash toy polywnymou ws String.. Gemizoume ton power
+//kai vriskoume an uparxei arnhtikh dunamh.
+for(j:=0; j<lengthPoly; j++){  
+  if((polyTemp[j] == k && j==lengthPoly-1 && dirtyBit!=1 )){// k^1==k sto telos
+  	       if( !existPower(power, 1)){     
+  	        power:= append(power,1);
+		power:= revlist(sort(power)); 
+               }
+	} 
+	else{
+		if(polyTemp[j] == k){
+			if(polyTemp[j+1]=="^"){
+				if(polyTemp[j+2]== "-"){ //arnhtikh dunamh.. Ypologise gia kathe arnhtikh dunamh to f(k)
+					print(factorialP(expr(polyTemp[j+3]),"-")); //Typwse ws mhnyma
+					dirtyBit:=1;
+				}
+				else{
+                                       if( !existPower(power,expr(polyTemp[j+2]))){ 
+					if(dirtyBit!=1){
+						power:= append(power,expr(polyTemp[j+2]));
+						power:= revlist(sort(power));
+					}
+                                      }
+				}
+        
+			}
+			else{// k^1 = k
+				if(length(power)==0) {
+					power:= append(power,1);
+					power:= revlist(sort(power));
+                                       
+				}
+				if( power[length(power)-1]!=1){
+					power:= append(power,1);      
+					power:= revlist(sort(power));
+				}
+
+			}
+		}
+	}
+}
+
+
+
+//an yparxei mono statheros oros
+ if(length(coeffic)==1 && dirtyBit!=1){
+   print("      ------------------------>O statheros oros einai o parakatw:");
+   print(concat("      ------------------------>",coeffic[0]));
+   return(coeffic[0]); 
+
+ }
+
+
+
+//An den exw vrei arnhtikh dunamh upologizw to athroisma
+ if(dirtyBit!=1){
+  maxPower := max(power);
+  stirNum := stirlingS2(maxPower, power);
+  //print(stirNum);
+  print("The final sum is:");
+  final2:= factorialStirlinS2(stirNum, power, k, coeffic);
+ }
+
+
+}:;
+
+//////////////////////////////////// Elegxos gia to an exei ksanaemfanistei i dunamh  ///////////////////////////////////////////////
+existPower(power, pow):={
+
+  local j;
+
+  for(j:=0; j<length(power); j++){
+
+    if(power[j] == pow){return(1);}
+    
+  }
+  return(0);
+}:;
+///////////////////////////////////////////     to teliko athroisma        //////////////////////////////////////////////////////////////
+//Ylopoihsh telikou athroismatos
+//H sunarthsh auth pairnei ta ekshs orismata:
+//stirNum : Lista me tous suntelestes StirlingS2 
+//power: Lista me tis dunameis tou poluwnumou se fthinousa seira
+//k: ws pros poia metavlhth einai to poluwnumo
+//coeffic : Lista me tous suntelestes tou poluwnumou
+// Epistrefei: To teliko apotelesma se morfh expression
+factorialStirlinS2(stirNum, power, k, coeffic):={
+
+  local j, convList, stirLength, d, g, fd, final, c, t;
+
+  convList := []; //An diavasoume tin kathe seira tou StirlingS2 apo D->A 
+                  //tote exoume tous suntelestes me fthinousa seira
+  
+  fd := []; //To antistoixo fm(k)
+  final:=[]; // To teliko apotelesma
+
+  stirLength := length(stirNum);
+   print(stirNum);
+  //ypologismos factorial
+  for(d:= max(power); d>0; d--){
+    fd := append(fd,factorialP(d,"+")); 
+  }
+
+  //ypologismos tou telikou athroismatos
+ for(j:=0; j<stirLength; j++){
+	convList:= convert(stirNum[j], base,10);
+	t:= length(fd)-power[j];
+	for(c:=0; c<length(convList); c++){   
+		if(c!=length(convList)-1){
+                   final := final + coeffic[length(coeffic) - power[j] -1 ] *  convList[c] * fd[t];
+	}
+		else{
+			final := final + coeffic[length(coeffic) - power[j] -1 ] *  convList[c] * (factorialP(1,"+"));
+		}
+		t:=t+1;    
+	} 
+ }
+
+  final:= final+coeffic[length(coeffic)-1];  //Prosthiki statherou orou
+  final:= collect(final);
+  print(final);
+  final:= simplify(final); //epimeristikh sto teliko athroisma
+
+  return(final);
+}:;
+
+
+/////////////////////////////      ypologismos twn factorial         ///////////////////////////////////////////
+//Ypologismos twn fm(k)
+//Eisodos:-----------
+//power: Lista me tis dunameis toy poluwnumou
+//signOf: Metavlhth pou elegxei an emfanizetai arnhtikos ektheths
+//Eksodos:-----------
+//To zhtoumeno ginomeno
+//Shmeiwsh: An uparxei kapoios arnhtikos ektheths tote epistrefetai to 
+//factorialPower gi auton ton ektheth mono.
+
+factorialP(power, signOf):={
+
+       local g, fd, j;
+
+       fd:=1;
+
+	if(signOf== "+"){ //An oloi oi ekthetes einai thetikoi	  
+		for(g:=power; g>=0; g--){ 
+	            fd :=fd * (n-g);
+             }
+             fd := fd *( 1/(power+1));
+             return (fd);
+	} 
+	else{ //An uparxei arnhtikos ektheths
+  		print(concat("                        ----------------------------->You gave a negative power: ",concat("-",string(power))));
+		print("                        ----------------------------->The factorial power is:");               
+		for(g:=1; g<=power; g++){
+  	          fd := fd * (n+g);	
+             }
+             fd:=1/fd;
+             return(fd);
+	}
+
+}:;
+
+//////////////////////////////////       upologismos Stirling     /////////////////////////////////////////////////
+//Ypologismos ton suntelestwn StirlingS2
+//Eisodos Synarthshs: 
+//maxPower: O megistos ektheths
+//power: oloi oi ekthetes
+//Exodos Synarthshs:
+//Antikatastash tou power me tous antistoixous suntelestes kathe dunamhs
+
+stirlingS2(maxPower, power):={
+
+
+	local n, k, temp, item, sePoioStoixeio, powerLength, g, a, b, stirList, concatList, integerFromList;
+
+	temp :=[];
+	powerLength :=0;
+	stirList := []; //Suntelestes StirlingS2
+	concatList := []; //Grammh tou "trigwnou" StirlingS2 me tous suntelestes
+
+      //Oi prwtes treis theseis tou "trigwnou" StirlingS2
+    
+	temp:= append(temp, 1);//n=0,k=0 
+	temp:= append(temp, 0);//n=1,k=0
+	temp:= append(temp, 1);//n=1,k=1
+
+    
+        sePoioStoixeio :=3; 
+	
+	for(n:=2; n<=maxPower; n++){ //Ypologismos twn suntelestwn (n  k) = k*(n-1  k) + (n-1  k-1)
+		for(k:=0; k<=n; k++){
+			if(k==0){ //Gia k=0 ola ta stoixeia einai 0
+				temp:= append(temp, 0); 
+				sePoioStoixeio := sePoioStoixeio+1 ;
+			}
+			if(k==n){ //Gia k=n ola ta stoixeia einai 1
+				temp:= append(temp, 1); 
+				sePoioStoixeio := sePoioStoixeio+1 ;
+			}
+			if(k!=0 && k!=n){ //Ta endiamesa upologizontai me ton typo
+				item := k* temp[sePoioStoixeio-n] + temp[sePoioStoixeio-n-1];
+				temp:= append(temp, item);
+				sePoioStoixeio := sePoioStoixeio+1 ;
+			}
+		}
+	} 
+	 
+	powerLength := length(power);
+	
+	for(g:=0; g<powerLength; g++){ //Gia th dunamh pou dinoume, epestrepse thn antistoixh grammh StirlingS2
+  	   
+               	a:=0;
+		for(b:=0; b<= power[g]; b++){
+			a:=a+b;
+		}
+		for(b:=0; b< power[g]+1; b++){   
+			concatList := append(concatList, temp[a]); 
+			a:= a+1;
+		}
+		 
+		integerFromList := convert(revlist(concatList),base,10);
+		concatList:= [];
+		power[g]:=integerFromList;
+
+
+	}
+
+	return (power);
+
+}:;
